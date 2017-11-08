@@ -1,177 +1,259 @@
 
-window.onload = function(){
-	var puzzle = document.getElementById("puzzlearea");
-	var pieces = puzzle.children;
-	var positionTop = 0;
-	var positionLeft = 0;
-	var backgroundLeft = 0;
-	var backgroundTop = 0;
-	var emptyTop = 300;
-	var emptyLeft = 300;
-	var oldTop;
-	var oldLeft;
-	var shufflePiece;
-	var shuffles = [];
-	var shuffleTimes = 1000;
-	
-	for(var i=0; i < pieces.length; i++){
-		pieces[i].className = "puzzlepiece";
-		pieces[i].style.top =  positionTop + "px";
-		pieces[i].style.left = positionLeft + "px";
-		pieces[i].style.backgroundPosition = backgroundLeft + "px " + backgroundTop + "px";
-		pieces[i].onclick= move;
-		pieces[i].onmouseover= movable;
 
-		if(positionLeft < 300){
-			positionLeft = positionLeft + 100;
-			backgroundLeft = backgroundLeft - 100;
-		}
-		else{
-			positionLeft = 0;
-			backgroundLeft = 0;
-			positionTop = positionTop + 100;
-			backgroundTop = backgroundTop - 100;
-		}	
-	}
+   
+// end of game notification
+    var pieces;
+    var blink;
+    var timer;
+    var emptyLeft;
+    var emptyTop;
 
-	function move(){
-		oldTop = parseInt(this.style.top);
-		oldLeft = parseInt(this.style.left);
-		if (oldTop == emptyTop && oldLeft == (emptyLeft-100) || oldTop == emptyTop && oldLeft == (emptyLeft+100) || oldTop == (emptyTop-100) && oldLeft == emptyLeft || oldTop == (emptyTop+100) && oldLeft == emptyLeft){
-			this.style.top = emptyTop + "px";
-			this.style.left = emptyLeft + "px";
-			emptyTop = oldTop;
-			emptyLeft = oldLeft;
-		}
-	}
+window.onload = function()
+{
+   
+    var puzzleArea = document.getElementById('puzzlearea');
+    
+    pieces = puzzleArea.getElementsByTagName('div');
 
-	function movable(){
-		oldTop = parseInt(this.style.top);
-		oldLeft = parseInt(this.style.left);
-		if (oldTop == emptyTop && oldLeft == (emptyLeft-100) || oldTop == emptyTop && oldLeft == (emptyLeft+100) || oldTop == (emptyTop-100) && oldLeft == emptyLeft || oldTop == (emptyTop+100) && oldLeft == emptyLeft){
-			$(this).addClass('movablepiece');	
-		}
-		else{
-			$(this).removeClass("movablepiece");
-		}
-	}
+    for (var i=0; i<pieces.length; i++)
+    {
+        pieces[i].style.backgroundImage="url('background.jpg')";
+        pieces[i].className = 'puzzlepiece';
+        pieces[i].style.left = (i%4*100)+'px';
+        pieces[i].style.top = (parseInt(i/4)*100) + 'px';
+        pieces[i].style.backgroundPosition= '-' + pieces[i].style.left + ' ' + '-' + pieces[i].style.top;
+        pieces[i].onmouseover = function()
+        {
+            if (move(parseInt(this.innerHTML)))
+            {
+                this.style.border = "2px solid red";
+                this.style.color = "#006600";
+            }
+        };
+        pieces[i].onmouseout = function()
+        {
+            this.style.border = "2px solid black";
+            this.style.color = "#000000";
+        };
 
-	function Shuffle(){
-		for(var c = 0; c < shuffleTimes; c++){
-			var choice = Math.floor (Math.random () * 4);
-			console.log(choice);
-			if ( choice == 0) {
-				(getStyle((emptyTop-100)+"px", emptyLeft+"px"))|| getStyle((emptyTop+100)+"px", emptyLeft+"px");
-				oldTop = parseInt(shufflePiece.style.top);
- 				oldLeft = parseInt(shufflePiece.style.left);
- 				shufflePiece.style.top = emptyTop + "px";
- 				shufflePiece.style.left = emptyLeft + "px";
-				emptyTop = oldTop;
- 				emptyLeft = oldLeft;
- 			}
-			else if ( choice == 1) {
- 				(getStyle(emptyTop+"px", (emptyLeft-100)+"px")) || getStyle(emptyTop+"px", (emptyLeft + 100)+"px");
-				oldTop = parseInt(shufflePiece.style.top);
-				oldLeft = parseInt(shufflePiece.style.left);
-				shufflePiece.style.top = emptyTop + "px";
-				shufflePiece.style.left = emptyLeft + "px";
-				emptyTop = oldTop;
-				emptyLeft = oldLeft;
-			}
-			else if ( choice == 2) {
-				getStyle((emptyTop+100)+"px", emptyLeft+"px") || (getStyle((emptyTop-100)+"px", emptyLeft+"px"));
-				oldTop = parseInt(shufflePiece.style.top);
-				oldLeft = parseInt(shufflePiece.style.left);
-				shufflePiece.style.top = emptyTop + "px";
-				shufflePiece.style.left = emptyLeft + "px";
-				emptyTop = oldTop;
-				emptyLeft = oldLeft;
-			}
- 			else {
-				getStyle(emptyTop+"px", (emptyLeft + 100)+"px") || (getStyle(emptyTop+"px", (emptyLeft-100)+"px"));
-				oldTop = parseInt(shufflePiece.style.top);
-				oldLeft = parseInt(shufflePiece.style.left);
-				shufflePiece.style.top = emptyTop + "px";
-				shufflePiece.style.left = emptyLeft + "px";
-				emptyTop = oldTop;
-				emptyLeft = oldLeft;
-			}
-		}	
-	}
-	function getStyle(top, left){
-		for(var i =0; i < pieces.length; i++){
-			if(pieces[i].style.top==top && pieces[i].style.left==left){
-				shufflePiece = pieces[i];
-				return shufflePiece;		
-			}
-		}
-	}
-	document.getElementById("controls").onclick = Shuffle; 
+        pieces[i].onclick = function()
+        {
+            if (move(parseInt(this.innerHTML)))
+            {
+                swap(this.innerHTML-1);
+                if (Finish())
+                {
+                    youWin();
+                }
+                return;
+            }
+        };
+    }
 
-	function Timer()
- 	{
- 		this.start_time = "00:00:00";
- 		this.time_id = "#timer";
- 		this.name = timer;
- 	}
+    emptyTop = '300px';
+    emptyLeft = '300px';
 
- 	Timer.prototype.start=function()
- 	{
- 		this.reset();
- 		setInterval(this.name + '.count',1000);
- 	}
+    var shufflebutton = document.getElementById('shufflebutton');
+    shufflebutton.onclick = function()
+    {
 
- 	Timer.prototype.reset=function() 
- 	{
+       for (var i=0; i<250; i++)
+        {
+            var rand = parseInt(Math.random()* 100) %4;
+            if (rand == 0)
+            {
+                var tmp = calcUp(emptyTop, emptyLeft);
+                if ( tmp != -1)
+                {
+                    swap(tmp);
+                }
+            }
+            if (rand == 1)
+            {
+                var tmp = calcDown(emptyTop, emptyLeft);
+                if ( tmp != -1) 
+                {
+                    swap(tmp);
+                }
+            }
 
- 		time= this.start_time.split(":");
- 		this.hours=parseInt(time[0]);
- 		this.minutes=parseInt(time[1]);
- 		this.seconds=parseInt(time[2]);
- 		this.update_time();
- 	}
+            if (rand == 2)
+            {
+                var tmp = calcLeft(emptyTop, emptyLeft);
+                if ( tmp != -1)
+                {
+                    swap(tmp);
+                }
+            }
 
- 	Timer.prototype.count=function()
- 	{
- 		this.seconds=this.seconds++;
- 		if(this.hours>=0 && this.hours<12)
- 		{
-			this.hours=this.hours;
-		}
-		else
-		{
-			this.hours=0;
-		}
-		if (this.minutes>=0 && this.minutes<60)
-		{
-			this.minutes=this.inutes;
-		}
-		else
-		{
-			this.minutes=0;
-			this.hours=this.hours++;
-		}
-		if(this.seconds>=0 && this.seconds<60)
-		{
-			this.seconds=this.seconds++;
-		}
-		else
-		{
-			this.seconds=0;
-			this.minutes=this.minutes++;
-		}
- 	}
+            if (rand == 3)
+            {
+                var tmp = calcRight(emptyTop, emptyLeft);
+                if (tmp != -1)
+                {
+                    swap(tmp);
+                }
+            }
+        }
+    };
+};
 
- 	Timer.prototype.update_time=function()
- 	{
+function move(position)
+{
+    if (calcLeft(emptyTop, emptyLeft) == (position-1))
+    {
+        return true;
+    }
 
- 		hours = this.hours;
- 		minutes=this.minutes;
- 		seconds = this.seconds;
- 		if (hours<10) hours = "0" + hours;
- 		if(minutes<10) hours + "0" + minutes;
- 		if(seconds<10) seconds = "0" + seconds;
- 		$(this.time_id).val(hours +":"+ minutes +":"+ seconds)	
- 	}
+    if (calcDown(emptyTop, emptyLeft) == (position-1))
+    {
+        return true;
+    }
 
+    if (calcUp(emptyTop, emptyLeft) == (position-1))
+    {
+        return true;
+    }
+
+    if (calcRight(emptyTop, emptyLeft) == (position-1))
+    {
+        return true;
+    }
+}
+function Blink()
+{
+    blink --;
+    if (blink == 0)
+    {
+        var body = document.getElementsByTagName('body');
+        body[0].style.backgroundColor = "#FFFFFF";
+        alert('You Win!');
+        return;
+    }
+    if (blink % 2)
+    {
+        var body = document.getElementsByTagName('body');
+        body[0].style.backgroundColor = "#00FF00";    
+    }
+    else
+    {
+        var body = document.getElementsByTagName('body');
+        body[0].style.backgroundColor = "#FF0000";
+    }
+    timer = setTimeout(Blink, 100);
+}
+
+function youWin()
+{
+    var body = document.getElementsByTagName('body');
+    body[0].style.backgroundColor = "#FF0000";
+    blink = 10;
+    timer = setTimeout(Blink, 100);
+}
+
+function Finish()
+{
+    var flag = true;
+    for (var i = 0; i < pieces.length; i++) {
+        var y = parseInt(pieces[i].style.top);
+        var x = parseInt(pieces[i].style.left);
+
+        if (x != (i%4*100) || y != parseInt(i/4)*100)
+        {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
+}
+
+function calcLeft(x, y)
+{
+    var xx = parseInt(x);
+    var yy = parseInt(y);
+
+    if (xx > 0)
+    {
+        for (var z = 0; z < pieces.length; z++) 
+        {
+            if (parseInt(pieces[z].style.left) + 100 == xx && parseInt(pieces[z].style.top) == yy)
+            {
+                return z;
+            } 
+        }
+    }
+    else 
+    {
+        return -1;
+    }
+}
+
+function calcRight(x, y)
+{
+    var xx = parseInt(x);
+    var yy = parseInt(y);
+    if (xx < 300)
+    {
+        for (var c =0; c<pieces.length; c++){
+            if (parseInt(pieces[c].style.left) - 100 == xx && parseInt(pieces[c].style.top) == yy) 
+            {
+                return c;
+            }
+        }
+    }
+    else
+    {
+        return -1;
+    } 
+}
+
+function calcUp(x, y)
+{
+    var xx = parseInt(x);
+    var yy = parseInt(y);
+    if (yy > 0)
+    {
+        for (var i=0; i<pieces.length; i++)
+        {
+            if (parseInt(pieces[i].style.top) + 100 == yy && parseInt(pieces[i].style.left) == xx) 
+            {
+                return i;
+            }
+        } 
+    }
+    else 
+    {
+        return -1;
+    }
+}
+
+function calcDown(x, y)
+{
+    var xx = parseInt(x);
+    var yy = parseInt(y);
+    if (yy < 300)
+    {
+        for (var d=0; d<pieces.length; d++)
+        {
+            if (parseInt(pieces[d].style.top) - 100 == yy && parseInt(pieces[d].style.left) == xx) 
+            {
+                return d;
+            }
+        }
+    }
+    else
+    {
+        return -1;
+    } 
+}
+
+function swap(you)
+{
+    var temp = pieces[you].style.top;
+    pieces[you].style.top = emptyLeft;
+    emptyLeft = temp;
+
+    temp = pieces[you].style.left;
+    pieces[you].style.left = emptyTop;
+    emptyTop = temp;
 }
